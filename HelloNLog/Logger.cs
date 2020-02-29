@@ -11,13 +11,20 @@ namespace HelloNLog
 
         static void Main(string[] args)
         {
-            Doctor doctor = new Doctor();
+            Doctor doctor = new Doctor(new XmlFileStore());
             doctor.ChangeName("Name");
         }
 
     }
+    public interface IStore
+    {
+        static ILogger _logger;
+        string GetDoctorName();
+        void SaveDoctorName(string name);
+    }
 
-    public class DatabaseStore
+
+    public class DatabaseStore : IStore
     {
         public string GetDoctorName()
         {
@@ -29,8 +36,7 @@ namespace HelloNLog
             
         }
     }
-
-    public class XmlFileStore
+    public class XmlFileStore : IStore
     {
         public string GetDoctorName()
         {
@@ -42,8 +48,7 @@ namespace HelloNLog
 
         }
     }
-
-    public class CsvFileStore
+    public class CsvFileStore : IStore
     {
         public string GetDoctorName()
         {
@@ -60,35 +65,18 @@ namespace HelloNLog
     {
         private static ILogger _logger = LogManager.GetCurrentClassLogger();
 
-        public string StorageType { get; set; }
+        private readonly IStore _store;
 
-        private readonly DatabaseStore _databaseStore = new DatabaseStore();
-        private readonly XmlFileStore _xmlFileStore = new XmlFileStore();
-        private readonly CsvFileStore _csvFileStore = new CsvFileStore();
-
-        public Doctor()
+        public Doctor(IStore store)
         {
-            
+            _store = store;
         }
 
         public void ChangeName(string name)
         {
             _logger.Trace("ChangeName - Enter");
 
-            if (StorageType == "Database")
-            {
-                _databaseStore.SaveDoctorName(name);
-            }
-            if (StorageType == "XML")
-            {
-                _xmlFileStore.SaveDoctorName(name);
-            }
-            if (StorageType == "CSV")
-            {
-                _csvFileStore.SaveDoctorName(name);
-            }
-
-            _databaseStore.SaveDoctorName(name);
+            _store.SaveDoctorName(name);
 
             _logger.Trace("ChangeName - Exit");
         }
